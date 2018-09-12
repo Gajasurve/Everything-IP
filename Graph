@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+import unicodedata
+import string
+import re,os
+import shodan
+import requests
+from prettytable import PrettyTable
+from OTXv2 import OTXv2
+x = PrettyTable()
+
+x.field_names = ["Host  ","COUNTRY","BLACKLISTED","ABUSEIP","OTX INDICATIONS","OPEN PORTS"]
+cookies = {
+    'cookiebanner-accepted': '1',
+    'optinmodal': 'shown',
+    '__utmt': '1',
+    '__utma': '67803593.580391096.1496747284.1497281718.1497345596.7',
+    '__utmb': '67803593.1.10.1497345596',
+    '__utmc': '67803593',
+    '__utmz': '67803593.1496747284.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)',
+}
+
+headers = {
+    'Origin': 'http://www.ipvoid.com',
+    'Accept-Encoding': 'gzip, deflate',
+    'Accept-Language': 'en-US,en;q=0.8',
+    'Upgrade-Insecure-Requests': '1',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Cache-Control': 'max-age=0',
+    'Referer': 'http://www.ipvoid.com/',
+    'Connection': 'keep-alive',
+}
+def check(i):
+    ipvx=""
+    Sho=""
+    ot=""
+    abu=""
+    CC=""
+    data = [('ip', i),]
+    g=requests.post('http://www.ipvoid.com/ip-blacklist-check/', headers=headers, cookies=cookies, data=data)
+
+    string1 = unicodedata.normalize('NFKD', g.text).encode('ascii','ignore')
+    r = string1.translate(string.maketrans("\n\t\r", "   "))
+    CC=re.findall(r"Country Code.+?Flag\" \/> \((\w+)\)",str(r))
+    if "BLACKLISTED" in r:
+        ipvx= '✓'
+
+    api = shodan.Shodan('MM72AkzHXdHpC8iP65VVEEVrJjp7zkgd')
+    result = api.count(r"'net:"+i+"'", facets=[['port', 10]])
+    s=re.findall(r"value':\s(\d+)",str(result))
+    Sho=s
+
+#print(x)
+#   print("------otx------")
+    otx = OTXv2("0f557f34b5ab7d084f9ac76b824faaed8dbc6eb5db5e57d89d038fcf384d11c7")
+    name = 'Test Pulse'
+    indicators = [
+        {'indicator': i, 'type': 'IPv4'},
+        {'indicator': 'aoldaily.com', 'type': 'Domain'}
+        ]
+    response3 = otx.create_pulse(name=name ,public=True ,indicators=indicators ,tags=[] , references=[])
+    ot=re.findall(r"indicators_count':\s(\d+),",str(response3))
+    g=requests.get("https://www.abuseipdb.com/check/"+i).text
+    if not x:
+        pass
+    else:
+        abu='✓'
+    x.add_row([i,CC,ipvx,abu,ot,Sho])
+#list=["52.3.3.6","98.216.201.210","54.71.158.53"]
+list=["138.197.105.12","112.78.43.190","97.66.210.209","97.66.210.188","97.66.209.241","97.64.251.134","90.159.236.200","97.64.140.118","197.50.75.164","97.124.228.63","172.93.138.134","97.107.98.231","46.38.101.3","41.178.63.26","97.107.111.44","220.164.2.106","97.107.103.19","96.95.251.241","190.213.10.158","96.95.245.251"]
+for i in list:
+    check(i)
+    os.system("clear")
+    print(x)
