@@ -47,14 +47,14 @@ def check(i):
     if "BLACKLISTED" in r:
         ipvx= '✓'
 
-    api = shodan.Shodan('MM72AkzHXdHpC8iP65VVEEVrJjp7zkgd')
+    api = shodan.Shodan('SHODAN API HERE')
     result = api.count(r"'net:"+i+"'", facets=[['port', 10]])
     s=re.findall(r"value':\s(\d+)",str(result))
     Sho=s
 
 #print(x)
 #   print("------otx------")
-    otx = OTXv2("0f557f34b5ab7d084f9ac76b824faaed8dbc6eb5db5e57d89d038fcf384d11c7")
+    otx = OTXv2("OTX API HERE")
     name = 'Test Pulse'
     indicators = [
         {'indicator': i, 'type': 'IPv4'},
